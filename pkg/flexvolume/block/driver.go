@@ -234,6 +234,7 @@ func (d OCIFlexvolumeDriver) Attach(logger *zap.SugaredLogger, opts flexvolume.O
 		// If we get a 409 conflict response when attaching we
 		// presume that the device is already attached.
 		logger.With("volumeID", volumeOCID).Info("Volume already attached.")
+		logger.With("ctx", ctx).Info("Content of context.Background() in Attach")
 		attachment, err = c.Compute().FindVolumeAttachment(ctx, cfg.CompartmentID, volumeOCID)
 		if err != nil {
 			return flexvolume.Fail(logger, "Failed to find volume attachment: ", err)
@@ -275,7 +276,8 @@ func (d OCIFlexvolumeDriver) Detach(logger *zap.SugaredLogger, pvOrVolumeName, n
 
 	volumeOCID := deriveVolumeOCID(cfg.RegionKey, pvOrVolumeName)
 	ctx := context.Background()
-	attachment, err := c.Compute().FindVolumeAttachment(ctx, cfg.CompartmentID, volumeOCID)
+	logger.With("ctx", ctx).Info("Content of context.Background() in Detach")
+	attachment, err := c.Compute().FindVolumeAttachment(ctx, cfg.CompartmentID, volumeOCID, logger)
 	if err != nil {
 		return flexvolume.Fail(logger, "Failed to find volume attachment: ", err)
 	}
@@ -317,6 +319,7 @@ func (d OCIFlexvolumeDriver) IsAttached(logger *zap.SugaredLogger, opts flexvolu
 
 	ctx := context.Background()
 	volumeOCID := deriveVolumeOCID(cfg.RegionKey, opts["kubernetes.io/pvOrVolumeName"])
+	logger.With("ctx", ctx).Info("Content of context.Background() in IsAttached")
 	attachment, err := c.Compute().FindVolumeAttachment(ctx, cfg.CompartmentID, volumeOCID)
 	if err != nil {
 		return flexvolume.DriverStatus{
